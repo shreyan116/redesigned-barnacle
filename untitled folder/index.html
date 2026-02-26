@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Helping Hands | Founder Kothapalli Shreyan</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --teal: #0d9488; --dark-900: #020617; --dark-800: #0f172a;
+            --gold: #fbbf24; --emerald: #10b981; --rose: #f43f5e;
+            --slate: #1e293b; --glass: rgba(255, 255, 255, 0.03);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; transition: background 0.5s, border-color 0.5s; }
+        body { background: var(--dark-900); color: #f1f5f9; overflow: hidden; height: 100vh; display: flex; }
+
+        /* --- CINEMATIC LOADING --- */
+        #loading {
+            position: fixed; inset: 0; background: var(--dark-900); z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            animation: fadeOut 1s forwards 2s;
+        }
+        .pulse-text { font-family: 'Space Grotesk'; font-size: 2.5rem; color: var(--teal); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
+
+        /* --- SIDEBAR --- */
+        .sidebar { width: 340px; background: var(--dark-800); border-right: 1px solid #1e293b; padding: 45px 30px; display: flex; flex-direction: column; }
+        .nav-label { font-size: 0.65rem; color: var(--teal); font-weight: 800; letter-spacing: 2px; margin: 25px 0 10px 10px; text-transform: uppercase; }
+        .nav-item { 
+            padding: 16px; border-radius: 16px; cursor: pointer; margin-bottom: 8px; color: #94a3b8; 
+            font-weight: 600; transition: 0.3s; display: flex; align-items: center; gap: 14px;
+        }
+        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+        .nav-item.active { background: var(--teal); color: white; box-shadow: 0 10px 25px rgba(13, 148, 136, 0.2); }
+
+        /* --- CONTENT AREA --- */
+        .viewport { flex: 1; padding: 50px; overflow-y: auto; background: radial-gradient(circle at 0% 0%, #0f172a 0%, #020617 100%); padding-bottom: 100px; }
+        .view { display: none; }
+        .view.active { display: block; animation: slideUp 0.6s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* --- ADVANCED CARDS --- */
+        .hero-card { 
+            background: linear-gradient(135deg, var(--teal) 0%, #0f172a 100%); 
+            padding: 60px; border-radius: 40px; position: relative; overflow: hidden; margin-bottom: 40px;
+        }
+        .hero-card::after { content: "HH"; position: absolute; right: -20px; bottom: -40px; font-size: 15rem; font-weight: 900; opacity: 0.05; }
+        
+        .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 40px; }
+        .data-card { background: var(--glass); border: 1px solid #1e293b; padding: 30px; border-radius: 28px; transition: 0.3s; }
+        .data-card:hover { border-color: var(--teal); background: rgba(255,255,255,0.05); }
+
+        /* --- STOCK & TRACKER --- */
+        .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
+        .stock-box { background: #0f172a; border-radius: 20px; overflow: hidden; cursor: pointer; transition: 0.4s; border: 1px solid #1e293b; }
+        .stock-box:hover { transform: scale(1.05); border-color: var(--gold); }
+        .stock-box img { width: 100%; height: 150px; object-fit: cover; filter: brightness(0.8); }
+
+        table { width: 100%; border-collapse: separate; border-spacing: 0 10px; }
+        td { padding: 18px; background: rgba(255,255,255,0.02); border-top: 1px solid #1e293b; }
+        tr:hover td { background: rgba(255,255,255,0.05); }
+
+        /* --- MODALS & NOTIFS --- */
+        #dispatch-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+        }
+        .modal { background: #1e293b; padding: 45px; border-radius: 35px; width: 500px; border: 1px solid var(--teal); }
+        input, select, textarea { 
+            width: 100%; padding: 15px; margin: 10px 0 20px; background: #020617; 
+            border: 1px solid #334155; color: white; border-radius: 12px; 
+        }
+
+        #toast { position: fixed; top: 30px; right: 30px; background: var(--teal); padding: 20px 40px; border-radius: 20px; font-weight: 800; display: none; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+        /* --- NEWS TICKER --- */
+        #sos-ticker {
+            position: fixed; bottom: 0; left: 0; width: 100%; background: #450a0a; color: white; padding: 12px 0; 
+            font-weight: 800; border-top: 2px solid var(--rose); z-index: 10001; display: none; overflow: hidden; white-space: nowrap;
+        }
+        @keyframes scroll-ticker { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+    </style>
+</head>
+<body>
+
+    <div id="loading"><div class="pulse-text">HEARING THE NEED...</div></div>
+    <div id="toast">Logistics Updated</div>
+
+    <aside class="sidebar">
+        <h2 style="font-family:'Space Grotesk'; font-size: 2rem; color: var(--teal);">HELPING<br>HANDS</h2>
+        
+        <span class="nav-label">Identity</span>
+        <div class="nav-item active" onclick="tab('founder', this)">👤 Shreyan Kothapalli</div>
+        <div class="nav-item" onclick="tab('hq', this)">📍 Hyderabad HQ</div>
+        
+        <span class="nav-label">Operations</span>
+        <div class="nav-item" onclick="tab('stock', this)">📦 Inventory Control</div>
+        <div class="nav-item" onclick="tab('live', this)">📡 Live Intel Feed</div>
+        <div class="nav-item" onclick="tab('sos', this)" style="border: 1px dashed var(--rose); color: var(--rose);">🚨 Emergency SOS</div>
+        
+        <span class="nav-label">Impact</span>
+        <div class="nav-item" onclick="tab('honor', this)">💎 Wall of Honor</div>
+        <div class="nav-item" onclick="tab('pay', this)">💳 Asset Injection</div>
+        <div class="nav-item" onclick="tab('funds', this)">💰 Funds & Treasury</div>
+
+        <div style="margin-top:auto; background:linear-gradient(to right, #134e4a, #0f172a); padding:25px; border-radius:24px;">
+            <p style="font-size:0.7rem; color:var(--gold); font-weight:800; letter-spacing:1px;">DIRECT LINE</p>
+            <p style="font-weight:700; margin-top:5px;">+91 9441084727</p>
+            <p style="font-size:0.8rem; opacity:0.6;">kothapallishreyan@gmail.com</p>
+        </div>
+    </aside>
+
+    <main class="viewport">
+        
+        <div id="view-founder" class="view active">
+            <div class="hero-card">
+                <h4 style="color:var(--gold); letter-spacing:4px; font-weight:800;">CHIEF FOUNDER</h4>
+                <h1 style="font-family:'Space Grotesk'; font-size:4rem; margin:10px 0;">Kothapalli Shreyan</h1>
+                <p style="font-size:1.2rem; opacity:0.8; max-width:700px; line-height:1.6;">
+                    Architect of modern humanitarian logistics. Shreyan founded Helping Hands on the principle that "Resource mismanagement is the world's true disaster."
+                </p>
+            </div>
+
+            <div class="feature-grid" style="grid-template-columns: 1fr;">
+                <div class="data-card" style="background: linear-gradient(45deg, #020617, #134e4a); border: 1px solid var(--emerald); text-align: center; padding: 40px;">
+                    <h4 style="color:var(--emerald); letter-spacing:4px; font-weight: 800;">TOTAL LIVES TOUCHED</h4>
+                    <h1 id="impact-counter" style="font-size: 5rem; font-family: 'Space Grotesk'; color: white; margin: 10px 0;">0</h1>
+                    <p id="impact-subtext" style="font-size: 1rem; opacity: 0.6; font-weight: 600;">Connecting global resources to human needs in real-time.</p>
+                </div>
+            </div>
+            
+            <div class="feature-grid">
+                <div class="data-card">
+                    <h3 style="color:var(--teal)">Vision 2026</h3>
+                    <p style="font-size:0.9rem; margin-top:10px; color:#94a3b8;">Implementing AI-driven demand forecasting to predict medical shortages before they happen across India.</p>
+                </div>
+                <div class="data-card">
+                    <h3 style="color:var(--gold)">Philanthropy</h3>
+                    <p style="font-size:0.9rem; margin-top:10px; color:#94a3b8;">Directly overseen the distribution of ₹50 Crore worth of relief material in the last fiscal year.</p>
+                </div>
+                <div class="data-card">
+                    <h3 style="color:var(--emerald)">Integrity</h3>
+                    <p style="font-size:0.9rem; margin-top:10px; color:#94a3b8;">Every single donation is tracked via a blockchain-ready ledger accessible by the public.</p>
+                </div>
+            </div>
+
+            <div class="card" style="background:var(--glass); padding:40px; border-radius:30px;">
+                <h2>Message to Potential Partners</h2>
+                <p style="margin-top:20px; line-height:1.8; color:#cbd5e1;">
+                    "Helping Hands is not just an NGO; it's a technology-first logistics hub. We don't just ask for money; we ask for assets. Whether it's a truck, a carton of medicines, or a simple meal, my system ensures it reaches the person who needs it most within 24 hours. Join me in Hyderabad to witness the change."
+                </p>
+            </div>
+        </div>
+
+        <div id="view-sos" class="view">
+            <div class="hero-card" style="background: linear-gradient(135deg, #450a0a 0%, #020617 100%); border: 1px solid var(--rose);">
+                <h4 style="color:var(--rose); letter-spacing:4px; font-weight:800;">CRISIS MANAGEMENT</h4>
+                <h1 style="font-family:'Space Grotesk'; font-size:3.5rem; margin:10px 0;">Emergency SOS</h1>
+                <p style="opacity:0.8; max-width:600px;">Activating this overrides all standard logistics. 80% of fleet and inventory will be rerouted to the selected strike zone.</p>
+            </div>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+                <div class="data-card" style="text-align:center; padding:50px; border: 2px solid #450a0a;">
+                    <div id="sos-status-icon" style="font-size:4rem; margin-bottom:20px;">📡</div>
+                    <h2>Status: <span id="sos-text">STANDBY</span></h2>
+                    <select id="disaster-zone" style="background:#450a0a; border-color:var(--rose); margin-top:20px;">
+                        <option>Select Strike Zone...</option>
+                        <option>Cyclone Relief (Odisha)</option>
+                        <option>Flood Response (Assam)</option>
+                        <option>Earthquake (Himalayas)</option>
+                    </select>
+                    <button onclick="triggerSOS()" id="sos-btn" style="width:100%; padding:20px; background:var(--rose); color:white; font-weight:900; border:none; border-radius:15px; cursor:pointer; font-size:1.2rem;">INITIALIZE RED ALERT</button>
+                </div>
+                <div class="data-card">
+                    <h3>Fleet Deployment</h3>
+                    <div style="margin-top:30px;">
+                        <p>Heavy Cargo Trucks</p>
+                        <div style="width:100%; height:8px; background:#334155; border-radius:10px; margin:10px 0;"><div id="bar-fleet" style="width:15%; height:100%; background:var(--rose); transition:2s;"></div></div>
+                        <p>Medical Rapid Response</p>
+                        <div style="width:100%; height:8px; background:#334155; border-radius:10px; margin:10px 0;"><div id="bar-med" style="width:10%; height:100%; background:var(--rose); transition:2s;"></div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-funds" class="view">
+            <div class="hero-card" style="background: linear-gradient(135deg, #1e293b 0%, #020617 100%);">
+                <h1>Financial Treasury</h1>
+                <p>Real-time asset liquidity and operational expenses.</p>
+            </div>
+            <div class="feature-grid">
+                <div class="data-card"><h4 style="color:var(--teal)">TOTAL FUNDS</h4><h2 id="stat-total-funds">₹50,00,00,000</h2></div>
+                <div class="data-card"><h4 style="color:var(--emerald)">INJECTIONS</h4><h2 id="stat-donations">₹50,00,00,000</h2></div>
+                <div class="data-card"><h4 style="color:var(--rose)">OPERATIONAL</h4><h2 id="stat-spent">₹0</h2></div>
+            </div>
+            <div class="data-card">
+                <h3>Transaction Ledger</h3>
+                <table style="margin-top:20px;">
+                    <thead><tr style="color:var(--teal); font-size:0.7rem;"><th>TRX ID</th><th>TYPE</th><th>AMOUNT</th><th>STATUS</th></tr></thead>
+                    <tbody id="ledger-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-hq" class="view">
+            <div class="hero-card" style="background: linear-gradient(135deg, #1e293b 0%, #020617 100%);">
+                <h1 style="font-family:'Space Grotesk';">Hyderabad Global Hub</h1>
+                <p>Helping Hands Tower, Plot 14, HITEC City, Telangana - 500081</p>
+            </div>
+            
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:30px;">
+                <div class="data-card">
+                    <h2 style="margin-bottom:20px;">🏢 Physical Infrastructure</h2>
+                    <ul style="list-style:none; line-height:2;">
+                        <li>● 50,000 sq. ft. Temperature-Controlled Warehouse</li>
+                        <li>● 24/7 Operations Command Center</li>
+                        <li>● Fleet of 40 GPS-Tracked Delivery Vans</li>
+                        <li>● Dedicated Vaccine Cold-Chain Wing</li>
+                    </ul>
+                </div>
+                <div class="data-card">
+                    <h2 style="margin-bottom:20px;">💵 Cash/Direct Donations</h2>
+                    <p>For donors who prefer physical interaction, our HQ maintains a <b>Secure Wealth Desk</b>.</p>
+                    <div style="margin-top:20px; padding:15px; background:rgba(0,0,0,0.3); border-radius:15px;">
+                        <p><b>Counter 1 (80G Receipts):</b> 09:00 - 18:00</p>
+                        <p><b>Counter 4 (Item Drop-off):</b> 24 Hours Open</p>
+                        <p style="color:var(--gold); margin-top:10px;">Security clearance required: Call Shreyan at 9441084727.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-stock" class="view">
+            <h2 style="margin-bottom:30px;">📦 Strategic Stockpile (Click to Dispatch)</h2>
+            <div class="stock-grid" id="stock-container"></div>
+        </div>
+
+        <div id="view-live" class="view">
+            <div class="data-card">
+                <h2>📡 Incoming Logistics Requests</h2>
+                <table>
+                    <thead><tr style="color:var(--teal); font-size:0.7rem;"><th>ID</th><th>ITEM</th><th>DESTINATION</th><th>CONTACT</th><th>PROGRESS</th></tr></thead>
+                    <tbody id="tracker-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-honor" class="view">
+            <h2 style="margin-bottom:30px;">💎 Top Contributors (20+ Leaders)</h2>
+            <div class="data-card">
+                <table>
+                    <tbody id="honor-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="view-pay" class="view">
+            <div style="display:grid; grid-template-columns: 1.2fr 0.8fr; gap:30px;">
+                <div class="data-card">
+                    <h2>Asset Injection (Advanced)</h2>
+                    <input type="text" id="donor-name" placeholder="Full Identity / Company Name">
+                    <input type="number" id="donor-amt" placeholder="Injection Amount (INR)">
+                    <select>
+                        <option>Visa / Mastercard Enterprise</option>
+                        <option>Amex Centurion</option>
+                        <option>Direct SWIFT Wire</option>
+                        <option>Crypto-Asset (USDT/BTC)</option>
+                    </select>
+                    <button onclick="processDonation()" style="width:100%; padding:18px; background:var(--teal); border:none; color:white; font-weight:800; border-radius:15px; cursor:pointer;">CONFIRM INJECTION</button>
+                </div>
+                <div class="data-card" style="text-align:center;">
+                    <h3>QR Fast-Track</h3>
+                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=HH_Shreyan_9441084727" style="margin:25px 0; border:10px solid white; border-radius:20px;">
+                    <p>UPI ID: <b>kothapallishreyan@upi</b></p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div id="sos-ticker">
+        <div id="ticker-content" style="display: inline-block; padding-left: 100%; animation: scroll-ticker 20s linear infinite;">
+            CRITICAL ALERT: DISASTER PROTOCOL ACTIVE — SHREYAN KOTHAPALLI AUTHORIZED EMERGENCY DEPLOYMENT...
+        </div>
+    </div>
+
+    <div id="dispatch-overlay">
+        <div class="modal">
+            <h2 id="modal-title" style="color:var(--teal)"></h2>
+            <p style="opacity:0.6; margin-bottom:20px;">Fill Receiver Logistics</p>
+            <input type="number" id="m-qty" placeholder="Quantity">
+            <input type="text" id="m-phone" placeholder="Receiver Ph: +91 00000 00000">
+            <textarea id="m-addr" placeholder="Full Delivery Address"></textarea>
+            <button onclick="finalizeDispatch()" style="width:100%; padding:18px; background:var(--emerald); border:none; color:white; font-weight:800; border-radius:15px; cursor:pointer;">DISPATCH CARGO</button>
+            <button onclick="closeModal()" style="width:100%; background:none; border:none; color:#64748b; margin-top:15px; cursor:pointer;">Abort</button>
+        </div>
+    </div>
+
+    <script>
+        // UPDATED stockData with Impact Multipliers
+        const stockData = [
+            {n: "Oxygen Vials", i: "https://modernmedical.store/wp-content/uploads/2025/07/OXYGEN-CYLINDER-240-CFT.jpg", impact: 1, unit: "Life Breathed"},
+            {n: "Medical Kits", i: "https://insights.ibx.com/wp-content/uploads/2019/06/first-aid-kit-screenshot.png", impact: 5, unit: "Patients Treated"},
+            {n: "Rice Cargo", i: "https://c.ndtvimg.com/2023-08/brlp7gk_uncooked-rice-or-rice-grains_625x300_18_August_23.jpg?im=FaceCrop,algorithm=dnn,width=545,height=307", impact: 50, unit: "Meals Provided"},
+            {n: "Blood Plasma", i: "https://tse4.mm.bing.net/th/id/OIP.SPe2mclMDd_SK7VRhCc7VQHaFw?pid=Api&P=0&h=180", impact: 3, unit: "Critical Saves"},
+            {n: "PPE Bulk", i: "https://static.toiimg.com/thumb/msid-78216723,width-400,resizemode-4/78216723.jpg", impact: 10, unit: "Frontliners Protected"},
+            {n: "Ventilators", i: "https://images.unsplash.com/photo-1516549655169-df83a0774514?w=400", impact: 25, unit: "Intensive Supports"},
+            {n: "Canned Food", i: "https://tse2.mm.bing.net/th/id/OIP.q7TMZq11Ker5SJbwgiKvWgHaEK?pid=Api&P=0&h=180", impact: 15, unit: "Nutritional Servings"},
+            {n: "Blankets", i: "https://tse3.mm.bing.net/th/id/OIP.MLU5b0lSXj0S4My2SdxSdQHaFS?pid=Api&P=0&h=180", impact: 2, unit: "Families Sheltered"},
+            {n: "Flashlights", i: "https://tse1.mm.bing.net/th/id/OIP.8HelTxxQE6SFDiplkj4UcwHaD4?pid=Api&P=0&h=180", impact: 1, unit: "Nights Illuminated"},
+            {n: "Solar Gen", i: "https://tse2.mm.bing.net/th/id/OIP.zIN4dNxCweZDlTItbr0jYQHaD_?pid=Api&P=0&h=180", impact: 40, unit: "Communities Powered"},
+            {n: "Soap / Hygiene", i: "https://images.unsplash.com/photo-1605264964528-06403738d6dc?w=400", impact: 8, unit: "Disease Preventions"},
+            {n: "Baby Formula", i: "https://tse1.mm.bing.net/th/id/OIP.KSqOXVHPiFMWeSqhYDDLXAHaHa?pid=Api&P=0&h=180", impact: 12, unit: "Infants Fed"},
+            {n: "Water Filter", i: "https://5.imimg.com/data5/SELLER/Default/2023/10/353160463/CE/JE/QK/2353700/commercial-ro-plant-500x500.jpg", impact: 100, unit: "Clean Liters Generated"},
+            {n: "Trauma Pads", i: "https://tse3.mm.bing.net/th/id/OIP.b2BVwMyvSWVH4CWrTkBKtQHaHa?pid=Api&P=0&h=180", impact: 5, unit: "Injuries Managed"},
+            {n: "First Aid Kit", i: "https://tse1.mm.bing.net/th/id/OIP.Ug_fjQ4A3pzmRmYpVegkewHaE8?pid=Api&P=0&h=180", impact: 10, unit: "Emergency Responses"},
+            {n: "Antibiotics", i: "https://tse4.mm.bing.net/th/id/OIP.k8bHPZEM96XAjwYZlBPS-wHaE7?pid=Api&P=0&h=180", impact: 20, unit: "Infections Cured"},
+            {n: "Medical Cots", i: "https://tse2.mm.bing.net/th/id/OIP.2MttRz_zuXStTswiLLuCfgHaE7?pid=Api&P=0&h=180", impact: 4, unit: "Patient Bed-Nights"},
+            {n: "Wheelchairs", i: "https://tse1.mm.bing.net/th/id/OIP.r-GjWFiWy0tJbNHL6JudTQHaHa?pid=Api&P=0&h=180", impact: 1, unit: "Mobility Restored"},
+            {n: "Walking Aids", i: "https://tse4.mm.bing.net/th/id/OIP.SolmB4Ib_8k_zuDQA7fyagHaEK?pid=Api&P=0&h=180", impact: 1, unit: "Seniors Assisted"},
+            {n: "Thermometers", i: "https://www.laboratorydeal.com/cdn/shop/products/Digital_Thermometer_thermometer_3.jpg", impact: 5, unit: "Health Screenings"},
+            {n: "Surgical Gear", i: "https://tse2.mm.bing.net/th/id/OIP.BqVHvkjbjnvtaR1DS_aY4AHaFc?pid=Api&P=0&h=180", impact: 15, unit: "Safe Operations"},
+            {n: "Energy Bars", i: "https://www.healthyfood.com/wp-content/uploads/2018/02/Energy-bars-1024x659.jpg", impact: 10, unit: "Quick Meals"},
+            {n: "Milk Powder", i: "https://tse3.mm.bing.net/th/id/OIP.H0uZVcL8K0PFnydiLSmZzgHaKX?pid=Api&P=0&h=180", impact: 30, unit: "Nutritional Boosts"},
+            {n: "Defibrillator", i: "https://sakomed.com/wp-content/uploads/2025/10/Right-Defibrillator.webp", impact: 10, unit: "Cardiac Saves"},
+            {n: "Saline Packs", i: "https://tse4.mm.bing.net/th/id/OIP.XBoxnQWzFWCQmc__8W1rqQHaJ4?pid=Api&P=0&h=180", impact: 15, unit: "Hydration Recoveries"},
+            {n: "Stretchers", i: "https://tse3.mm.bing.net/th/id/OIP.oZ99A4Wy4VdGZX4XD1nmtQHaFw?pid=Api&P=0&h=180", impact: 5, unit: "Safe Transports"},
+            {n: "Face Shields", i: "https://tse1.mm.bing.net/th/id/OIP.e52osll1DUR-fAASQDGingHaHa?pid=Api&P=0&h=180", impact: 5, unit: "Clinical Safety"},
+            {n: "Generator", i: "https://images.jdmagicbox.com/quickquotes/images_main/mahindra-powerol-generator-150-kva-2188206644-ruv3qeru.jpg", impact: 50, unit: "Critical Hours Powered"},
+            {n: "Radio Set", i: "https://tse3.mm.bing.net/th/id/OIP.fPoUN1XQSqF-QM7sAUtOjgHaE7?pid=Api&P=0&h=180", impact: 2, unit: "Communication Links"}
+        ];
+
+        const donors = ["Ratan Tata", "Mukesh Ambani", "Shiv Nadar", "Azim Premji", "Anand Mahindra", "Sudha Murty", "Shreyan K.", "Kumar Birla", "Narayana Murty", "Gautam Adani", "Zuckerberg Found.", "Melinda Gates", "Radhakishan Damani", "Uday Kotak", "Dilip Shanghvi", "Savitri Jindal", "Cyrus Poonawalla", "Lakshmi Mittal", "Kiran Mazumdar", "Pankaj Patel"];
+
+        let currentActiveItem = "";
+        let financialData = { totalInjections: 500000000, totalSpent: 0 };
+        let totalImpact = 842910; // Baseline Impact
+
+        // --- CORE NAVIGATION ---
+        function tab(id, el) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('view-' + id).classList.add('active');
+            el.classList.add('active');
+        }
+
+        // --- IMPACT COUNTER LOGIC ---
+        function updateImpact(amount, itemUnit) {
+            const counter = document.getElementById('impact-counter');
+            const subtext = document.getElementById('impact-subtext');
+            const startValue = totalImpact;
+            totalImpact += amount;
+            
+            let duration = 1000; 
+            let startTime = null;
+
+            function animate(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const progress = Math.min((currentTime - startTime) / duration, 1);
+                const currentDisplay = Math.floor(progress * (totalImpact - startValue) + startValue);
+                counter.innerText = currentDisplay.toLocaleString();
+                if (progress < 1) requestAnimationFrame(animate);
+            }
+            
+            requestAnimationFrame(animate);
+            subtext.innerHTML = `<span style="color:var(--gold)">+${amount}</span> ${itemUnit} recorded in the global grid.`;
+        }
+
+        // --- SOS LOGIC ---
+        let sosActive = false;
+        function triggerSOS() {
+            const zone = document.getElementById('disaster-zone').value;
+            if(zone === "Select Strike Zone...") return alert("Select a zone first.");
+            const ticker = document.getElementById('sos-ticker');
+            
+            if(!sosActive) {
+                sosActive = true;
+                document.getElementById('sos-btn').innerText = "TERMINATE EMERGENCY";
+                document.getElementById('sos-text').innerText = "ACTIVE RED ALERT";
+                document.getElementById('sos-status-icon').innerText = "🚨";
+                document.documentElement.style.setProperty('--teal', '#f43f5e');
+                ticker.style.display = 'block';
+                document.getElementById('ticker-content').innerText = `CRITICAL ALERT: DISASTER PROTOCOL ACTIVE FOR [${zone.toUpperCase()}] — ALL ASSETS REROUTED — SHREYAN KOTHAPALLI AUTHORIZED EMERGENCY DEPLOYMENT — `;
+                document.getElementById('bar-fleet').style.width = "95%";
+                document.getElementById('bar-med').style.width = "100%";
+                updateTreasury("SOS Emergency Ops", 500000, "DEBIT");
+                updateImpact(1500, "Emergency Interventions");
+            } else {
+                sosActive = false;
+                document.getElementById('sos-btn').innerText = "INITIALIZE RED ALERT";
+                document.getElementById('sos-text').innerText = "STANDBY";
+                document.documentElement.style.setProperty('--teal', '#0d9488');
+                ticker.style.display = 'none';
+                document.getElementById('bar-fleet').style.width = "15%";
+                document.getElementById('bar-med').style.width = "10%";
+            }
+        }
+
+        // --- TREASURY LOGIC ---
+        function updateTreasury(type, amt, mode) {
+            if(mode === "DEBIT") financialData.totalSpent += amt;
+            else financialData.totalInjections += amt;
+            
+            document.getElementById('stat-total-funds').innerText = "₹" + (financialData.totalInjections - financialData.totalSpent).toLocaleString('en-IN');
+            document.getElementById('stat-donations').innerText = "₹" + financialData.totalInjections.toLocaleString('en-IN');
+            document.getElementById('stat-spent').innerText = "₹" + financialData.totalSpent.toLocaleString('en-IN');
+            
+            const body = document.getElementById('ledger-body');
+            const row = body.insertRow(0);
+            row.innerHTML = `<td>#TRX-${Math.floor(Math.random()*9999)}</td><td><b>${type}</b></td><td style="color:${mode==='DEBIT'?'#f43f5e':'#10b981'}">₹${amt.toLocaleString('en-IN')}</td><td>SUCCESS</td>`;
+        }
+
+        // --- STOCKPILE GENERATION ---
+        function initStock() {
+            const container = document.getElementById('stock-container');
+            container.innerHTML = stockData.map(item => `
+                <div class="stock-box" onclick="openDispatch('${item.n}')">
+                    <img src="${item.i}">
+                    <div style="padding:15px; font-weight:800; font-size:0.75rem;">${item.n}</div>
+                </div>
+            `).join('');
+        }
+
+        // --- DISPATCH LOGIC ---
+        function openDispatch(name) {
+            currentActiveItem = name;
+            document.getElementById('modal-title').innerText = "Initiate Cargo: " + name;
+            document.getElementById('dispatch-overlay').style.display = 'flex';
+        }
+        function closeModal() { document.getElementById('dispatch-overlay').style.display = 'none'; }
+
+        function finalizeDispatch() {
+            const q = parseInt(document.getElementById('m-qty').value) || 0;
+            const p = document.getElementById('m-phone').value;
+            const a = document.getElementById('m-addr').value;
+            if(!p || !a) return alert("System requires full destination intel.");
+            
+            // IMPACT CALCULATION
+            const item = stockData.find(s => s.n === currentActiveItem);
+            const totalGained = q * item.impact;
+            updateImpact(totalGained, item.unit);
+
+            addTrackerEntry(currentActiveItem, a, p, "SHIPPED");
+            updateTreasury(`Cargo: ${currentActiveItem}`, 5000, "DEBIT");
+            closeModal();
+            showToast(`Asset Dispatched: ${currentActiveItem} (+${totalGained} Impact)`);
+        }
+
+        // --- LIVE TRACKER POPULATION ---
+        function startLiveTracker() {
+            const targets = ["Apollo GH, Hyd", "RedCross Base, Pune", "Relief Hub, Delhi", "City Med, Vizag"];
+            const status = ["EN-ROUTE", "SHIPPED", "PENDING"];
+            
+            setInterval(() => {
+                const item = stockData[Math.floor(Math.random()*stockData.length)].n;
+                const dest = targets[Math.floor(Math.random()*4)];
+                addTrackerEntry(item, dest, "+91 90000 12345", status[Math.floor(Math.random()*3)]);
+            }, 5000);
+        }
+
+        function addTrackerEntry(item, dest, ph, stat) {
+            const body = document.getElementById('tracker-body');
+            const row = body.insertRow(0);
+            row.innerHTML = `<td>#REQ-${Math.floor(Math.random()*9999)}</td><td><b>${item}</b></td><td>${dest}</td><td>${ph}</td><td><span style="color:var(--gold); font-weight:800;">${stat}</span></td>`;
+            if(body.rows.length > 10) body.deleteRow(10);
+        }
+
+        // --- HONOR WALL & PAYMENTS ---
+        function initHonor() {
+            const body = document.getElementById('honor-body');
+            body.innerHTML = donors.map(d => `<tr><td><b>${d}</b></td><td><span style="color:var(--emerald)">● VERIFIED</span></td><td>₹${Math.floor(Math.random()*90 + 10)} Lakhs</td></tr>`).join('');
+        }
+
+        function processDonation() {
+            const n = document.getElementById('donor-name').value;
+            const a = parseInt(document.getElementById('donor-amt').value);
+            if(!n || !a) return alert("Injection data required.");
+            
+            const body = document.getElementById('honor-body');
+            const row = body.insertRow(0);
+            row.innerHTML = `<td><b>${n}</b></td><td><span style="color:var(--gold)">● PROCESSING</span></td><td>₹${a.toLocaleString('en-IN')}</td>`;
+            updateTreasury(`Injection: ${n}`, a, "CREDIT");
+            showToast("Financial Injection Registered");
+            tab('honor', document.querySelectorAll('.nav-item')[5]);
+        }
+
+        function showToast(m) {
+            const t = document.getElementById('toast'); t.innerText = m; t.style.display = 'block';
+            setTimeout(() => t.style.display = 'none', 3000);
+        }
+
+        window.onload = () => { 
+            initStock(); 
+            initHonor(); 
+            startLiveTracker(); 
+            document.getElementById('impact-counter').innerText = totalImpact.toLocaleString();
+        };
+    </script>
+</body>
+</html>
